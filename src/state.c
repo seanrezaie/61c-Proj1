@@ -355,23 +355,38 @@ void update_state(game_state_t *state, int (*add_food)(game_state_t *state)) {
 char *read_line(FILE *fp) {
   // TODO: Implement this function.
   if (!fp) return NULL;
-  
-  char* buffer = malloc(1024);
+
+  size_t bufferSize = 128;
+  size_t currPos = 0;
+  char* buffer = malloc(bufferSize);
   if (!buffer) return NULL;
 
-  if (fgets(buffer, 1024, fp) == NULL) {
-      free(buffer);
-      return NULL;
-  }
+  while (1) {
+      if (currPos >= bufferSize - 1) {
+          bufferSize *= 2;
+          char *newBuffer = realloc(buffer, bufferSize);
+          if (!newBuffer) {
+              free(buffer);
+              return NULL;
+          }
+          buffer = newBuffer;
+      }
+      if (!fgets(buffer + currPos, bufferSize - currPos, fp)) {
+          if (currPos == 0) {
+              free(buffer);
+              return NULL;
+          }
+          break;
+      }
+      currPos += strlen(buffer + currPos);
+      if (buffer[currPos - 1] == '\n') {
+          break;
+      }
   
-  size_t len = strlen(buffer);
-  char *line = realloc(buffer, len + 1);
-  if (line == NULL) {
-      free(buffer);
-      return NULL;
   }
 
-  return line;
+  char *finalBuffer = realloc(buffer, currPos + 1);
+  return finalBuffer ? finalBuffer : buffer;
 }
 
 /* Task 5.2 */
