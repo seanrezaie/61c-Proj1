@@ -85,14 +85,11 @@ void free_state(game_state_t *state) {
       return;
   }
 
-  for (unsigned int i = 0; i < state->num_rows; i++) {
+  for (int i = 0; i < state->num_rows; i++) {
       free(state->board[i]);
   }
   free(state->board);
-
-  if(state->snakes != NULL && state->num_snakes > 0) { 
-      free(state->snakes);
-  }
+  free(state->snakes);
 
   free(state);
   return;
@@ -358,15 +355,22 @@ void update_state(game_state_t *state, int (*add_food)(game_state_t *state)) {
 char *read_line(FILE *fp) {
   // TODO: Implement this function.
   if (!fp) return NULL;
+  
+  char* buffer = malloc(1024);
+  if (!buffer) return NULL;
 
-  char *line = malloc(1024);
-  if (!line) return NULL;
-
-  if (fgets(line, 1024, fp) == NULL) {
-      free(line);
+  if (fgets(buffer, 1024, fp) == NULL) {
+      free(buffer);
       return NULL;
   }
   
+  size_t len = strlen(buffer);
+  char *line = realloc(buffer, len + 1);
+  if (line == NULL) {
+      free(buffer);
+      return NULL;
+  }
+
   return line;
 }
 
